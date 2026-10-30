@@ -25,4 +25,7 @@ enum UserRole {
       this == student || this == faculty || this == coordinator;
 
   bool get canClose => this == coordinator;
+
+  /// May review the automation failure queue and run the escalation job.
+  bool get canReviewAutomation => this == coordinator || this == facilitiesStaff;
 }

@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
+import '../services/api_client.dart';
+import 'failure_queue_screen.dart';
+import 'issue_list_screen.dart';
+import 'report_issue_screen.dart';
 
-/// Placeholder home. Real role-specific screens replace this in later steps.
+/// Role-aware home: shows what the user may do and links to the screens.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.user, required this.onLogout});
+  const HomeScreen({
+    super.key,
+    required this.user,
+    required this.api,
+    required this.onLogout,
+  });
 
   final AppUser user;
+  final ApiClient api;
   final VoidCallback onLogout;
+
+  void _open(BuildContext context, Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +34,7 @@ class HomeScreen extends StatelessWidget {
       ('Update repair progress', role.canUpdateProgress),
       ('Verify a resolution', role.canVerifyResolution),
       ('Close an issue', role.canClose),
+      ('Review automation failures', role.canReviewAutomation),
     ];
 
     return Scaffold(
@@ -40,12 +55,37 @@ class HomeScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              Text(
-                'Welcome, ${user.name}',
-                style: theme.textTheme.headlineSmall,
-              ),
+              Text('Welcome, ${user.name}',
+                  style: theme.textTheme.headlineSmall),
               const SizedBox(height: 4),
               Text(role.label, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (role.canReportIssue)
+                    FilledButton.icon(
+                      onPressed: () => _open(
+                          context, ReportIssueScreen(user: user, api: api)),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Report an issue'),
+                    ),
+                  FilledButton.tonalIcon(
+                    onPressed: () =>
+                        _open(context, IssueListScreen(api: api)),
+                    icon: const Icon(Icons.list),
+                    label: const Text('View issues'),
+                  ),
+                  if (role.canReviewAutomation)
+                    FilledButton.tonalIcon(
+                      onPressed: () => _open(
+                          context, FailureQueueScreen(user: user, api: api)),
+                      icon: const Icon(Icons.report_problem_outlined),
+                      label: const Text('Automation review'),
+                    ),
+                ],
+              ),
               const SizedBox(height: 24),
               Text('What you can do', style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
@@ -62,11 +102,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Issue screens arrive in the next steps.',
-                style: theme.textTheme.bodySmall,
               ),
             ],
           ),

@@ -16,6 +16,7 @@ class Issue {
     this.status = IssueStatus.reported,
     this.assignedToId,
     this.isEscalated = false,
+    this.routedTeam,
   });
 
   final String id;
@@ -31,6 +32,9 @@ class Issue {
   final IssueStatus status;
   final String? assignedToId;
   final bool isEscalated;
+
+  /// Team chosen by the automatic routing rules (set by the server).
+  final String? routedTeam;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -43,6 +47,7 @@ class Issue {
     IssueStatus? status,
     String? assignedToId,
     bool? isEscalated,
+    String? routedTeam,
     DateTime? updatedAt,
   }) =>
       Issue(
@@ -56,6 +61,7 @@ class Issue {
         status: status ?? this.status,
         assignedToId: assignedToId ?? this.assignedToId,
         isEscalated: isEscalated ?? this.isEscalated,
+        routedTeam: routedTeam ?? this.routedTeam,
         createdAt: createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -73,6 +79,7 @@ class Issue {
         status: IssueStatus.values.byName(json['status'] as String),
         assignedToId: json['assignedToId'] as String?,
         isEscalated: json['isEscalated'] as bool? ?? false,
+        routedTeam: json['routedTeam'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
@@ -88,6 +95,7 @@ class Issue {
         'status': status.name,
         'assignedToId': assignedToId,
         'isEscalated': isEscalated,
+        'routedTeam': routedTeam,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
