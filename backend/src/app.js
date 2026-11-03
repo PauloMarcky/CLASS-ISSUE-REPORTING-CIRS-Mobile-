@@ -7,14 +7,27 @@ const authRoutes = require('./routes/auth');
 
 const healthRoutes = require('./routes/health');
 const issueRoutes = require('./routes/issues');
+const userRoutes = require('./routes/users');
 const automationRoutes = require('./routes/automation');
 
 const app = express();
 // Week 14: security headers (helmet) and CORS limited to the configured web origin(s).
 app.use(helmet());
 app.use(cors({
-  origin: config.security.corsOrigins,
-  methods: ['GET', 'POST'],
+  origin: (requestOrigin, callback) => {
+    if (!requestOrigin) return callback(null, true);
+    const isConfigured = config.security.corsOrigins.includes(requestOrigin);
+    let isLocalDevelopment = false;
+    try {
+      const { hostname } = new URL(requestOrigin);
+      isLocalDevelopment =
+        hostname === 'localhost' || hostname === '127.0.0.1';
+    } catch {
+      isLocalDevelopment = false;
+    }
+    return callback(null, isConfigured || isLocalDevelopment);
+  },
+  methods: ['GET', 'POST', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use('/api', apiLimiter);
@@ -23,6 +36,7 @@ app.use(express.json({ limit: '20kb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/issues', issueRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/automation', automationRoutes);
 
 // Unknown route -> consistent JSON error.

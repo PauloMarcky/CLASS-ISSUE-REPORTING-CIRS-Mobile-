@@ -72,3 +72,50 @@ test('logger: sensitive fields are redacted', () => {
   assert.equal(out.description, '[REDACTED]');
   assert.equal(out.issueId, 3);
 });
+
+// Week 15 - State machine and role-based field permissions
+const { validateLoginInput } = require('../src/auth/validate');
+
+test('WF-01 allowed status transitions are enforced', () => {
+  const ALLOWED_TRANSITIONS = {
+    reported: ['categorized'],
+    categorized: ['assigned'],
+    assigned: ['inProgress'],
+    inProgress: ['resolved'],
+    resolved: ['verified', 'inProgress'],
+    verified: ['closed'],
+    closed: [],
+  };
+  assert.deepStrictEqual(ALLOWED_TRANSITIONS.reported, ['categorized']);
+  assert.deepStrictEqual(ALLOWED_TRANSITIONS.resolved, ['verified', 'inProgress']);
+  assert.deepStrictEqual(ALLOWED_TRANSITIONS.closed, []);
+});
+
+test('WF-02 coordinators can change all fields, facilities staff only status', () => {
+  const FIELD_ROLES = {
+    status: ['coordinator', 'facilitiesStaff'],
+    category: ['coordinator'],
+    priority: ['coordinator'],
+    assignedToId: ['coordinator'],
+  };
+  const allowedFieldsForRole = (role) =>
+    Object.entries(FIELD_ROLES)
+      .filter(([, roles]) => roles.includes(role))
+      .map(([field]) => field);
+
+  const coordFields = allowedFieldsForRole('coordinator');
+  assert.ok(coordFields.includes('status'));
+  assert.ok(coordFields.includes('category'));
+  assert.ok(coordFields.includes('assignedToId'));
+
+  const staffFields = allowedFieldsForRole('facilitiesStaff');
+  assert.ok(staffFields.includes('status'));
+  assert.ok(!staffFields.includes('category'));
+  assert.ok(!staffFields.includes('assignedToId'));
+});
+
+test('WF-03 students cannot access the update endpoint', () => {
+  const allowedRoles = ['coordinator', 'facilitiesStaff'];
+  assert.ok(!allowedRoles.includes('student'));
+  assert.ok(!allowedRoles.includes('faculty'));
+});

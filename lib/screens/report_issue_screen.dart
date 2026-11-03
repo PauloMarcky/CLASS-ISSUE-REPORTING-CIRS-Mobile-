@@ -88,60 +88,79 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Report an issue')),
+      appBar: AppBar(title: const Text('Report an Issue')),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
+          constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             children: [
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _title,
-                      enabled: !_loading,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                          labelText: 'Title', hintText: 'Projector not working'),
-                      validator: (v) => _check(v, 'Title', 5, 120),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Issue Details', style: theme.textTheme.titleLarge),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _title,
+                          enabled: !_loading,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Title',
+                            hintText: 'Projector not working',
+                            prefixIcon: Icon(Icons.title_outlined),
+                          ),
+                          validator: (v) => _check(v, 'Title', 5, 120),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _location,
+                          enabled: !_loading,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Location',
+                            hintText: 'Science Building - Room 204',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                          validator: (v) => _check(v, 'Location', 3, 120),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _description,
+                          enabled: !_loading,
+                          minLines: 4,
+                          maxLines: 6,
+                          decoration: const InputDecoration(
+                            labelText: 'What is wrong?',
+                            hintText: 'Describe the issue in detail...',
+                            alignLabelWithHint: true,
+                            prefixIcon: Icon(Icons.description_outlined),
+                          ),
+                          validator: (v) => _check(v, 'Description', 10, 2000),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: _loading ? null : _submit,
+                          icon: _loading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.send_outlined),
+                          label: Text(_loading ? 'Submitting...' : 'Submit report'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _location,
-                      enabled: !_loading,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                          labelText: 'Location',
-                          hintText: 'Science Building - Room 204'),
-                      validator: (v) => _check(v, 'Location', 3, 120),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _description,
-                      enabled: !_loading,
-                      minLines: 4,
-                      maxLines: 6,
-                      decoration: const InputDecoration(
-                          labelText: 'What is wrong?',
-                          alignLabelWithHint: true),
-                      validator: (v) => _check(v, 'Description', 10, 2000),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Submit report'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -150,28 +169,60 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   color: theme.colorScheme.errorContainer,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_errorMessage!,
-                            style: TextStyle(
-                                color: theme.colorScheme.onErrorContainer)),
-                        for (final d in _errorDetails)
-                          Text('- $d',
-                              style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer)),
+                        Icon(
+                          Icons.error_outline,
+                          color: theme.colorScheme.onErrorContainer,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onErrorContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              for (final d in _errorDetails)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '• $d',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onErrorContainer,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               if (_duplicate != null)
                 Card(
+                  color: Colors.orange[50],
                   child: ListTile(
-                    leading: const Icon(Icons.content_copy),
-                    title: const Text('Similar issue already reported'),
+                    leading: Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+                    title: Text(
+                      'Similar issue already reported',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     subtitle: Text(
                       '#${_duplicate!.existingId}: ${_duplicate!.existingTitle} '
                       '(${_duplicate!.existingStatus}). No new report was created.',
+                      style: TextStyle(color: Colors.orange[800]),
                     ),
                   ),
                 ),
@@ -192,15 +243,37 @@ class _SuccessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final routed = issue.category != null;
     return Card(
-      child: ListTile(
-        leading: const Icon(Icons.check_circle, color: Colors.green),
-        title: Text('Report #${issue.id} received'),
-        subtitle: Text(
-          routed
-              ? 'Routed to ${issue.routedTeam} as ${issue.category!.label}, '
-                  'priority ${issue.priority.label}.'
-              : 'Automatic routing could not decide. A coordinator will '
-                  'review it.',
+      color: Colors.green[50],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.green[600], size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Report #${issue.id} Received',
+                    style: TextStyle(
+                      color: Colors.green[900],
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    routed
+                        ? 'Routed to ${issue.routedTeam} as ${issue.category!.label}, priority ${issue.priority.label}.'
+                        : 'Automatic routing could not decide. A coordinator will review it.',
+                    style: TextStyle(color: Colors.green[800], fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
+import '../models/user_role.dart';
 import '../services/api_client.dart';
 import 'failure_queue_screen.dart';
 import 'issue_list_screen.dart';
@@ -23,6 +24,19 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
+  IconData _iconForRole(UserRole role) {
+    switch (role) {
+      case UserRole.student:
+        return Icons.school_outlined;
+      case UserRole.faculty:
+        return Icons.person_outline;
+      case UserRole.facilitiesStaff:
+        return Icons.engineering_outlined;
+      case UserRole.coordinator:
+        return Icons.admin_panel_settings_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -39,10 +53,10 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Classroom Issue Reporting'),
+        title: const Text('Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_outlined),
             tooltip: 'Sign out',
             onPressed: onLogout,
           ),
@@ -51,60 +65,167 @@ class HomeScreen extends StatelessWidget {
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: const BoxConstraints(maxWidth: 900),
           child: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             children: [
-              Text('Welcome, ${user.name}',
-                  style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 4),
-              Text(role.label, style: theme.textTheme.titleMedium),
-              const SizedBox(height: 24),
+              // Welcome header
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Icon(
+                      _iconForRole(role),
+                      size: 32,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome back, ${user.name.split(' ').first}',
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        Text(role.label, style: theme.textTheme.bodyMedium),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // Quick actions
+              Text('Quick Actions', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 16),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 16,
+                runSpacing: 16,
                 children: [
                   if (role.canReportIssue)
-                    FilledButton.icon(
-                      onPressed: () => _open(
+                    _ActionButton(
+                      icon: Icons.add_circle_outline,
+                      label: 'Report Issue',
+                      color: theme.colorScheme.primary,
+                      onTap: () => _open(
                           context, ReportIssueScreen(user: user, api: api)),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Report an issue'),
                     ),
-                  FilledButton.tonalIcon(
-                    onPressed: () =>
-                        _open(context, IssueListScreen(api: api)),
-                    icon: const Icon(Icons.list),
-                    label: const Text('View issues'),
+                  _ActionButton(
+                    icon: Icons.list_alt_outlined,
+                    label: 'View Issues',
+                    color: theme.colorScheme.secondary,
+                    onTap: () =>
+                        _open(context, IssueListScreen(api: api, user: user)),
                   ),
                   if (role.canReviewAutomation)
-                    FilledButton.tonalIcon(
-                      onPressed: () => _open(
+                    _ActionButton(
+                      icon: Icons.report_problem_outlined,
+                      label: 'Automation Review',
+                      color: theme.colorScheme.tertiary,
+                      onTap: () => _open(
                           context, FailureQueueScreen(user: user, api: api)),
-                      icon: const Icon(Icons.report_problem_outlined),
-                      label: const Text('Automation review'),
                     ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Text('What you can do', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: 40),
+
+              // Permissions card
+              Text('Your Permissions', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 16),
               Card(
-                child: Column(
-                  children: [
-                    for (final ability in abilities)
-                      ListTile(
-                        leading: Icon(
-                          ability.$2 ? Icons.check_circle : Icons.block,
-                          color: ability.$2 ? Colors.green : Colors.grey,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    children: [
+                      for (final ability in abilities)
+                        ListTile(
+                          leading: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: ability.$2
+                                  ? Colors.green[50]
+                                  : Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              ability.$2 ? Icons.check : Icons.close,
+                              size: 18,
+                              color: ability.$2 ? Colors.green : Colors.grey,
+                            ),
+                          ),
+                          title: Text(
+                            ability.$1,
+                            style: TextStyle(
+                              color: ability.$2
+                                  ? Colors.grey[800]
+                                  : Colors.grey[500],
+                            ),
+                          ),
                         ),
-                        title: Text(ability.$1),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 180,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
         ),
       ),
     );

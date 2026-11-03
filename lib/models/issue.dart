@@ -9,12 +9,14 @@ class Issue {
     required this.description,
     required this.location,
     required this.reporterId,
+    this.reporterName,
     required this.createdAt,
     required this.updatedAt,
     this.category,
     this.priority = IssuePriority.medium,
     this.status = IssueStatus.reported,
     this.assignedToId,
+    this.assignedToName,
     this.isEscalated = false,
     this.routedTeam,
   });
@@ -27,10 +29,12 @@ class Issue {
   final String location;
 
   final String reporterId;
+  final String? reporterName;
   final IssueCategory? category;
   final IssuePriority priority;
   final IssueStatus status;
   final String? assignedToId;
+  final String? assignedToName;
   final bool isEscalated;
 
   /// Team chosen by the automatic routing rules (set by the server).
@@ -39,30 +43,37 @@ class Issue {
   final DateTime updatedAt;
 
   Issue copyWith({
+    String? id,
     String? title,
     String? description,
     String? location,
+    String? reporterId,
+    String? reporterName,
     IssueCategory? category,
     IssuePriority? priority,
     IssueStatus? status,
     String? assignedToId,
+    String? assignedToName,
     bool? isEscalated,
     String? routedTeam,
+    DateTime? createdAt,
     DateTime? updatedAt,
   }) =>
       Issue(
-        id: id,
+        id: id ?? this.id,
         title: title ?? this.title,
         description: description ?? this.description,
         location: location ?? this.location,
-        reporterId: reporterId,
+        reporterId: reporterId ?? this.reporterId,
+        reporterName: reporterName ?? this.reporterName,
         category: category ?? this.category,
         priority: priority ?? this.priority,
         status: status ?? this.status,
         assignedToId: assignedToId ?? this.assignedToId,
+        assignedToName: assignedToName ?? this.assignedToName,
         isEscalated: isEscalated ?? this.isEscalated,
         routedTeam: routedTeam ?? this.routedTeam,
-        createdAt: createdAt,
+        createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
 
@@ -72,12 +83,14 @@ class Issue {
         description: json['description'] as String,
         location: json['location'] as String,
         reporterId: json['reporterId'] as String,
+        reporterName: json['reporterName'] as String?,
         category: json['category'] == null
             ? null
             : IssueCategory.values.byName(json['category'] as String),
         priority: IssuePriority.values.byName(json['priority'] as String),
         status: IssueStatus.values.byName(json['status'] as String),
         assignedToId: json['assignedToId'] as String?,
+        assignedToName: json['assignedToName'] as String?,
         isEscalated: json['isEscalated'] as bool? ?? false,
         routedTeam: json['routedTeam'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -90,10 +103,12 @@ class Issue {
         'description': description,
         'location': location,
         'reporterId': reporterId,
+        'reporterName': reporterName,
         'category': category?.name,
         'priority': priority.name,
         'status': status.name,
         'assignedToId': assignedToId,
+        'assignedToName': assignedToName,
         'isEscalated': isEscalated,
         'routedTeam': routedTeam,
         'createdAt': createdAt.toIso8601String(),

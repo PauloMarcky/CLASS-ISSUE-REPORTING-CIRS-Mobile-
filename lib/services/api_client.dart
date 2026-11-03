@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import '../models/app_user.dart';
 import '../models/automation_failure.dart';
 import '../models/issue.dart';
 
@@ -83,6 +84,26 @@ class ApiClient {
   final http.Client _client;
   final String _baseUrl;
 
+  /// Signed token from POST /api/auth/login, sent with every request.
+  static String? authToken;
+
+  Future<AppUser> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final res = await _request('POST', '/api/auth/login', body: {
+        'email': email.trim(),
+        'password': password,
+      });
+      final json = res.json as Map<String, dynamic>;
+      authToken = json['token'] as String;
+      return AppUser.fromJson(json['user'] as Map<String, dynamic>);
+    } on ForbiddenException {
+      throw const ApiException('Invalid email or password.');
+    }
+  }
+
   Future<SubmitResult> createIssue({
     required String reporterId,
     required String title,
@@ -114,6 +135,30 @@ class ApiClient {
     return (res.json as List)
         .map((e) => Issue.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<AppUser>> listFacilitators() async {
+    final res = await _request('GET', '/api/users?role=facilitiesStaff');
+    return (res.json as List)
+        .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Issue> updateIssue({
+    required String issueId,
+    String? status,
+    String? category,
+    String? priority,
+    String? assignedToId,
+  }) async {
+    final body = <String, dynamic>{};
+    if (status != null) body['status'] = status;
+    if (category != null) body['category'] = category;
+    if (priority != null) body['priority'] = priority;
+    if (assignedToId != null) body['assignedToId'] = assignedToId;
+
+    final res = await _request('PATCH', '/api/issues/$issueId', body: body);
+    return Issue.fromJson(res.json as Map<String, dynamic>);
   }
 
   Future<List<AutomationFailure>> listFailures({required String actorId}) async {
@@ -151,15 +196,22 @@ class ApiClient {
     final uri = Uri.parse('$_baseUrl$path');
     final headers = {
       'Content-Type': 'application/json',
-      // Prototype identity header. Week 14 replaces it with a signed token.
-      if (actorId != null) 'x-user-id': actorId,
+      // Signed login token (Week 14). The server reads the role from the database.
     };
+
+    if (authToken != null) {
+      headers['Authorization'] = 'Bearer $authToken';
+    }
 
     http.Response response;
     try {
-      final call = method == 'POST'
-          ? _client.post(uri, headers: headers, body: jsonEncode(body ?? {}))
-          : _client.get(uri, headers: headers);
+      final encodedBody = jsonEncode(body ?? {});
+      final call = switch (method) {
+        'POST' => _client.post(uri, headers: headers, body: encodedBody),
+        'PATCH' => _client.patch(uri, headers: headers, body: encodedBody),
+        'GET' => _client.get(uri, headers: headers),
+        _ => throw ArgumentError('Unsupported HTTP method: $method'),
+      };
       response = await call.timeout(ApiConfig.timeout);
     } on TimeoutException {
       throw const NetworkException();

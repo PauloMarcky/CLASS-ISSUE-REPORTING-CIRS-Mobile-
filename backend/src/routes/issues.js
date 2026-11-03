@@ -20,6 +20,27 @@ const STATUSES = [
   'closed',
 ];
 
+// Database row -> JSON shape that matches the Flutter Issue model.
+function toApi(row) {
+  return {
+    id: String(row.id),
+    title: row.title,
+    description: row.description,
+    location: row.location,
+    reporterId: row.reporter_id,
+    reporterName: row.reporter_name,
+    category: row.category,
+    routedTeam: teamFor(row.category),
+    priority: row.priority,
+    status: row.status,
+    assignedToId: row.assigned_to_id,
+    assignedToName: row.assigned_to_name,
+    isEscalated: Boolean(row.is_escalated),
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  };
+}
+
 // Returns a list of human-readable problems. Empty list = input is valid.
 function validateIssueInput(body) {
   const problems = [];
@@ -39,25 +60,6 @@ function validateIssueInput(body) {
   check('location', 3, 120);
   check('reporterId', 1, 10);
   return problems;
-}
-
-// Database row -> JSON shape that matches the Flutter Issue model.
-function toApi(row) {
-  return {
-    id: String(row.id),
-    title: row.title,
-    description: row.description,
-    location: row.location,
-    reporterId: row.reporter_id,
-    category: row.category,
-    routedTeam: teamFor(row.category),
-    priority: row.priority,
-    status: row.status,
-    assignedToId: row.assigned_to_id,
-    isEscalated: Boolean(row.is_escalated),
-    createdAt: new Date(row.created_at).toISOString(),
-    updatedAt: new Date(row.updated_at).toISOString(),
-  };
 }
 
 // POST /api/issues -> report a new issue (workflow trigger).
@@ -141,14 +143,193 @@ router.get('/', requireAuth(), async (req, res) => {
   }
 
   try {
+    const baseQuery = `
+      SELECT i.*, u1.name as reporter_name, u2.name as assigned_to_name
+      FROM issues i
+      LEFT JOIN users u1 ON i.reporter_id = u1.id
+      LEFT JOIN users u2 ON i.assigned_to_id = u2.id
+    `;
     const [rows] = status
-      ? await pool.query('SELECT * FROM issues WHERE status = ? ORDER BY created_at DESC', [status])
-      : await pool.query('SELECT * FROM issues ORDER BY created_at DESC');
-    const canSeeAll = ['coordinator', 'facilitiesStaff'].includes(req.user.role);
-    const visible = canSeeAll ? rows : rows.filter((r) => r.reporter_id === req.user.id);
+      ? await pool.query(`${baseQuery} WHERE i.status = ? ORDER BY i.created_at DESC`, [status])
+      : await pool.query(`${baseQuery} ORDER BY i.created_at DESC`);
+
+    const visible = req.user.role === 'coordinator'
+      ? rows
+      : req.user.role === 'facilitiesStaff'
+        ? rows.filter((r) => r.assigned_to_id === req.user.id)
+        : rows.filter((r) => r.reporter_id === req.user.id);
     return res.json(visible.map(toApi));
   } catch (err) {
     logger.error('issue.list.failed', { code: err.code || 'UNKNOWN' });
+    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+  }
+});
+
+// Allowed status transitions (mirrors the Flutter IssueStatus.allowedNext).
+const ALLOWED_TRANSITIONS = {
+  reported: ['categorized'],
+  categorized: ['assigned'],
+  assigned: ['inProgress'],
+  inProgress: ['resolved'],
+  resolved: ['verified', 'inProgress'],
+  verified: ['closed'],
+  closed: [],
+};
+
+// Role-based field permissions.
+const FIELD_ROLES = {
+  status: ['coordinator', 'facilitiesStaff', 'student', 'faculty'],
+  category: ['coordinator'],
+  priority: ['coordinator'],
+  assignedToId: ['coordinator'],
+};
+
+function allowedFieldsForRole(role) {
+  return Object.entries(FIELD_ROLES)
+    .filter(([, roles]) => roles.includes(role))
+    .map(([field]) => field);
+}
+
+// PATCH /api/issues/:id -> update issue status, category, priority, or assignment.
+router.patch('/:id', requireAuth(['coordinator', 'facilitiesStaff', 'student', 'faculty']), async (req, res) => {
+  const issueId = req.params.id;
+  if (!issueId || typeof issueId !== 'string' || issueId.trim() === '') {
+    return res.status(400).json({ error: 'Invalid issue id.' });
+  }
+
+  const { status, category, priority, assignedToId } = req.body;
+  const role = req.user.role;
+  const allowedFields = allowedFieldsForRole(role);
+  const requestedFields = Object.keys(req.body).filter(
+    (k) => ['status', 'category', 'priority', 'assignedToId'].includes(k)
+  );
+
+  const forbidden = requestedFields.filter((f) => !allowedFields.includes(f));
+  if (forbidden.length > 0) {
+    logger.warn('issue.update.forbidden_field', { issueId, role, forbidden });
+    return res.status(403).json({ error: 'You are not allowed to change those fields.' });
+  }
+
+  const updates = [];
+  const params = [];
+
+  if (status !== undefined) {
+    const validStatuses = ['reported', 'categorized', 'assigned', 'inProgress', 'resolved', 'verified', 'closed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status.', details: ['status must be a valid value.'] });
+    }
+    updates.push('status = ?');
+    params.push(status);
+  }
+
+  if (category !== undefined) {
+    const validCategories = ['electrical', 'plumbing', 'airConditioning', 'furniture', 'itEquipment', 'cleanliness', 'safety', 'other', null];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ error: 'Invalid category.' });
+    }
+    updates.push('category = ?');
+    params.push(category);
+  }
+
+  if (priority !== undefined) {
+    const validPriorities = ['low', 'medium', 'high', 'urgent'];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({ error: 'Invalid priority.' });
+    }
+    updates.push('priority = ?');
+    params.push(priority);
+  }
+
+  if (assignedToId !== undefined) {
+    if (assignedToId !== null && typeof assignedToId !== 'string') {
+      return res.status(400).json({ error: 'Invalid assignedToId.' });
+    }
+    updates.push('assigned_to_id = ?');
+    params.push(assignedToId);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No valid fields to update.' });
+  }
+
+  try {
+    const [existing] = await pool.query(
+      'SELECT id, status, assigned_to_id, reporter_id FROM issues WHERE id = ?',
+      [issueId],
+    );
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Issue not found.' });
+    }
+
+    if (status !== undefined) {
+      const currentStatus = existing[0].status;
+      const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
+      if (!allowed.includes(status)) {
+        logger.warn('issue.update.invalid_transition', { issueId, from: currentStatus, to: status });
+        return res.status(400).json({
+          error: 'Invalid status transition.',
+          details: [`Cannot move from '${currentStatus}' to '${status}'.`],
+        });
+      }
+    }
+
+    if (assignedToId !== null && assignedToId !== undefined) {
+      const [assignees] = await pool.query(
+        'SELECT id FROM users WHERE id = ? AND role = ?',
+        [assignedToId, 'facilitiesStaff'],
+      );
+      if (assignees.length === 0) {
+        return res.status(400).json({
+          error: 'Invalid assignedToId.',
+          details: ['Assignee must be a Facilities Staff user.'],
+        });
+      }
+    }
+
+    const currentIssue = existing[0];
+    if (role === 'facilitiesStaff' &&
+        currentIssue.assigned_to_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the assigned facilitator can update this issue.' });
+    }
+    if (role === 'student' || role === 'faculty') {
+      const [owned] = await pool.query(
+        'SELECT id, status, reporter_id FROM issues WHERE id = ? AND reporter_id = ?',
+        [issueId, req.user.id],
+      );
+      if (owned.length === 0) {
+        return res.status(403).json({ error: 'You can only verify your own issue.' });
+      }
+      if (status !== 'verified' || owned[0].status !== 'resolved') {
+        return res.status(400).json({
+          error: 'Only resolved issues can be verified.',
+        });
+      }
+    }
+
+    params.push(issueId);
+    const [result] = await pool.query(
+      `UPDATE issues SET ${updates.join(', ')} WHERE id = ?`,
+      params
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Issue not found.' });
+    }
+
+    const [rows] = await pool.query(`
+      SELECT i.*, u1.name as reporter_name, u2.name as assigned_to_name
+      FROM issues i
+      LEFT JOIN users u1 ON i.reporter_id = u1.id
+      LEFT JOIN users u2 ON i.assigned_to_id = u2.id
+      WHERE i.id = ?
+    `, [issueId]);
+
+    if (status !== undefined) {
+      await recordEvent(pool, issueId, 'status_changed', req.user.id);
+    }
+    logger.info('issue.updated', { issueId, actor: req.user.id, role, fields: requestedFields });
+    return res.json(toApi(rows[0]));
+  } catch (err) {
+    logger.error('issue.update.failed', { code: err.code || 'UNKNOWN' });
     return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
   }
 });

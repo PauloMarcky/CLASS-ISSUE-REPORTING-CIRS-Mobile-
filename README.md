@@ -1,30 +1,75 @@
-# SRMS - Classroom Issue Reporting System (Flutter Web + Node.js + MySQL)
+# SRMS - Classroom Issue Reporting System
 
-Week 13 (SA7): automation foundation. Evidence and decisions: `docs/week13_sa7.md`.
+A modern, secure, and automated Flutter Web application with a Node.js backend and MySQL database, designed to streamline the reporting, routing, and resolution of classroom facility issues.
 
-## 1. Database (MySQL Workbench)
-Run these in order (File > Open SQL Script > lightning bolt):
-1. `backend/sql/01_schema.sql` (change the `srms_app` password first)
-2. `backend/sql/02_automation.sql`
-3. `backend/sql/03_week13_audit.sql`
+## Features
 
-## 2. Backend API
-```
-cd backend
-copy .env.example .env      (then put your srms_app password in .env)
-npm install
-npm test                    (no database needed)
-npm run demo                (retry / recovery evidence, no database needed)
-npm start                   (http://localhost:3000, check /api/health)
-```
+- Modern UI/UX: Clean, responsive Material 3 design with intuitive state management and role-based dashboards.
+- Automated Routing: Rule-based keyword detection automatically categorizes issues and assigns them to the correct maintenance team.
+- Duplicate Detection: Prevents redundant reports for the same location and category within a configurable time window.
+- Aging Escalation: Scheduled background jobs automatically flag unassigned issues that have been open for over 24 hours.
+- Resilient Automation: Bounded retry policies with exponential backoff for transient failures, and a human-review queue for permanent failures.
+- Secure Authentication: JWT-based authentication, bcrypt password hashing, rate limiting, and strict role-based access control (RBAC).
+- Audit Trail: Every state change and automation event is logged for full traceability.
 
-## 3. Flutter Web
-```
-copy dart_defines.example.json dart_defines.json
-flutter pub get
-flutter test
-flutter run -d chrome --dart-define-from-file=dart_defines.json
-```
-Demo accounts (fictional, prototype only): student@srms.test, faculty@srms.test,
-facilities@srms.test, coordinator@srms.test - password `Passw0rd!`.
-`.env` and `dart_defines.json` hold local settings and must not be committed.
+## Project Structure
+
+- lib/: Flutter Web frontend (screens, models, services, theme).
+- backend/: Node.js Express API (routes, automation engines, auth middleware).
+- backend/sql/: Database schema and automation tables.
+- docs/: Architecture decisions and automation evidence (week13_sa7.md).
+
+## Setup Instructions
+
+### 1. Database (MySQL)
+Run these scripts in order in MySQL Workbench (File > Open SQL Script > Execute):
+1. backend/sql/01_schema.sql (Edit the srms_app password in this file before running)
+2. backend/sql/02_automation.sql
+3. backend/sql/03_week13_audit.sql
+4. backend/sql/04_week14_security.sql
+
+### 2. Backend API
+    cd backend
+    copy .env.example .env
+    (Edit .env and set DB_PASSWORD to match the password you chose in 01_schema.sql)
+    (Set JWT_SECRET to a random string of at least 32 characters)
+
+    npm install
+    npm test                    (Run backend automation and security tests, no DB needed)
+    npm run demo                (Generate retry/recovery evidence, no DB needed)
+    npm run seed:passwords      (Set demo passwords, requires SEED_DEMO_PASSWORD env var)
+    npm start                   (Starts server on http://localhost:3000)
+
+Verify the API is running by visiting http://localhost:3000/api/health
+
+### 3. Flutter Web Frontend
+    (From the project root srms/)
+    copy dart_defines.example.json dart_defines.json
+    flutter pub get
+    flutter test                (Run widget and API client tests)
+    flutter run -d chrome --dart-define-from-file=dart_defines.json
+
+## Demo Accounts
+
+The system includes four fictional prototype accounts. Use the password Passw0rd! for all of them.
+
+| Role | Email | Permissions |
+|---|---|---|
+| Student | student@srms.test | Report issues, view own issues, verify resolutions. |
+| Faculty | faculty@srms.test | Report issues, view own issues, verify resolutions. |
+| Facilities Staff | facilities@srms.test | View all issues, update repair progress, review automation failures. |
+| Coordinator | coordinator@srms.test | Full access: categorize, assign, close issues, review automation failures. |
+
+## Security and Configuration
+
+- Never commit .env or dart_defines.json to version control.
+- The API enforces CORS, Helmet security headers, and rate limiting on all /api routes.
+- Passwords are hashed using bcrypt with a cost factor of 12.
+- Sensitive fields (email, description, passwords) are automatically redacted in structured logs.
+
+## Documentation and Evidence
+
+- Automation Decisions: See docs/week13_sa7.md for workflow boundaries, retry policies, and API contracts.
+- Test Evidence: Run npm test and flutter test to generate the required testing artifacts for IA6.
+
+Built for PFEBSIT 002 - Integrative Programming and Technologies 2

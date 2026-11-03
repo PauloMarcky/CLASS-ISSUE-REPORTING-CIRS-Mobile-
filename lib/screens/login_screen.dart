@@ -25,13 +25,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final error = widget.session.login(
+    final error = await widget.session.login(
       _emailController.text,
       _passwordController.text,
     );
-    if (error != null) {
+    if (error != null && mounted) {
       setState(() => _errorMessage = error);
     }
   }
