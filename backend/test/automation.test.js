@@ -7,6 +7,7 @@ const { routeIssue } = require('../src/automation/routing');
 const { runStep } = require('../src/automation/retry');
 const { escalateStaleIssues } = require('../src/automation/escalation');
 const { redact } = require('../src/logger');
+const { findDuplicate, normalizeLocation } = require('../src/automation/duplicates');
 
 const noWait = async () => {};
 const codeError = (code) => Object.assign(new Error('x'), { code });
@@ -71,6 +72,21 @@ test('logger: sensitive fields are redacted', () => {
   assert.equal(out.email, '[REDACTED]');
   assert.equal(out.description, '[REDACTED]');
   assert.equal(out.issueId, 3);
+});
+
+test('duplicate: location is normalized and the configured window is bound as a parameter', async () => {
+  const pool = fakePool((sql, params) => {
+    assert.match(sql, /DATE_SUB\(NOW\(\), INTERVAL \? HOUR\)/);
+    assert.deepEqual(params, ['electrical', 'test building - room 101', 48]);
+    return [[{ id: 12, title: 'Existing', status: 'reported' }]];
+  });
+  const duplicate = await findDuplicate(pool, {
+    location: '  Test   Building - Room 101 ',
+    category: 'electrical',
+    hours: 48,
+  });
+  assert.equal(normalizeLocation('  Test   Building - Room 101 '), 'test building - room 101');
+  assert.equal(duplicate.id, 12);
 });
 
 // Week 15 - State machine and role-based field permissions

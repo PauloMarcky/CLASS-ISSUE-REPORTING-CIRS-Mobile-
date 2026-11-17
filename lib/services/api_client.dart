@@ -238,6 +238,13 @@ class ApiClient {
       );
     }
     if (code == 401 || code == 403) throw const ForbiddenException();
+    if (code == 429) {
+      final map = json is Map<String, dynamic> ? json : <String, dynamic>{};
+      throw ApiException(
+        map['error'] as String? ??
+            'Too many attempts. Please wait before trying again.',
+      );
+    }
     if (code == 404) throw const ApiException('That item was not found.');
     throw const ServerException();
   }

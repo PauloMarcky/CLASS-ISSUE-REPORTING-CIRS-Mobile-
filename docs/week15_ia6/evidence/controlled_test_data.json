@@ -1,0 +1,37 @@
+{
+  "accounts": [
+    {
+      "role": "student",
+      "email": "student.week15@srms.test",
+      "password": "Fictional-Only-1!"
+    },
+    {
+      "role": "faculty",
+      "email": "faculty.week15@srms.test",
+      "password": "Fictional-Only-1!"
+    },
+    {
+      "role": "facilitiesStaff",
+      "email": "staff.week15@srms.test",
+      "password": "Fictional-Only-1!"
+    },
+    {
+      "role": "coordinator",
+      "email": "coordinator.week15@srms.test",
+      "password": "Fictional-Only-1!"
+    }
+  ],
+  "issue": {
+    "title": "Test projector is not responding",
+    "location": "Test Building - Room 101",
+    "description": "Fictional test issue: the classroom projector remains unavailable."
+  },
+  "boundaryValues": {
+    "titleMinCharacters": 5,
+    "titleMaxCharacters": 120,
+    "locationMinCharacters": 3,
+    "locationMaxCharacters": 120,
+    "descriptionMinCharacters": 10,
+    "descriptionMaxCharacters": 2000
+  }
+}

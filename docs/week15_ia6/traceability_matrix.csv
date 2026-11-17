@@ -1,0 +1,48 @@
+Requirement or risk,Test ID,Preconditions and data,Steps,Expected result,Actual result,Evidence link,Owner,Status
+Fictional sign-in can authenticate,AUTH-F-01,Four test accounts exist,POST login with student credentials,200 JWT and user role without password hash,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Invalid login input is rejected,AUTH-F-02,API running,Submit missing/wrong-type/oversized login fields,400 safe validation details,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Missing authentication is rejected,AUTH-N-01,No Authorization header,Call protected issue endpoint,401 Sign in required or equivalent,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Expired token is rejected,AUTH-N-02,Generated expired JWT,Call protected endpoint,401/403 and no protected data,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Altered/unsigned/wrong-secret token is rejected,AUTH-N-03,Invalid token variants,Call /api/auth/me,401/403 and no protected data,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Student/faculty can create an issue,WF-F-01,Student or faculty JWT and fictional issue,POST /api/issues,201 issue matching Flutter Issue JSON,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Coordinator role can be authorized for administration,AUTHZ-F-01,Coordinator JWT,Create/list/update automation data,200 for allowed operation,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Student cannot change category/priority/assignment,AUTHZ-N-01,Student JWT,Patch restricted fields on owned issue,403,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Facilities staff cannot update unassigned issue,AUTHZ-N-02,Facilities staff JWT and unassigned issue,Patch status,403,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Student/faculty cannot verify another user's issue,AUTHZ-N-03,Faculty JWT and issue owned by student account,Advance issue to resolved then faculty patches it to verified,403 You can only verify your own issue,200?202? See remaining-live-evidence.json,docs/week15_ia6/evidence/remaining-live-evidence.json,TBD,Passed
+Role-filtered issue lists prevent cross-user access,AUTHZ-N-04,Student/faculty and coordinator test data,List issues,Student/faculty see only own issues; coordinator/staff have intended scope,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Missing issue fields return safe validation,VAL-N-01,Valid JWT,POST issue with missing title/location/description,400 details and no insert,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Wrong-type issue fields are rejected,VAL-N-02,Valid JWT,POST issue title/location/description as numbers,400 validation details,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Oversized issue fields are rejected,VAL-N-03,Valid JWT,Send title 121 chars; location 121 chars; description 2001 chars,400 details for each field,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Injection-style text is handled safely,SEC-INJECT-N-01,Valid JWT,Submit SQL/script-style strings,Stored as text or safely rejected; no execution or error leak,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Title minimum and maximum boundaries agree,BOUND-F-01,Valid JWT,Submit title lengths 4/5/120/121,4 rejects; 5/120 accept; 121 rejects,Pending,docs/week15_ia6/evidence/ui-and-api/,TBD,Pending
+Location minimum and maximum boundaries agree,BOUND-F-02,Valid JWT,Submit location lengths 2/3/120/121,2 rejects; 3/120 accept; 121 rejects,Pending,docs/week15_ia6/evidence/ui-and-api/,TBD,Pending
+Description minimum and maximum boundaries agree,BOUND-F-03,Valid JWT,Submit description lengths 9/10/2000/2001,9 rejects; 10/2000 accept; 2001 rejects,Pending,docs/week15_ia6/evidence/ui-and-api/,TBD,Pending
+Status filter boundaries and invalid values are safe,BOUND-N-01,Valid JWT,GET ?status=empty and unknown status,Empty list behavior or valid list; unknown status 400,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Pagination or list edges are observable,BOUND-LIST-F-01,Empty and populated database states,List issues,Empty state for no rows; newest-first populated state for rows,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+API/Flutter Issue contract is compatible,CONTRACT-F-01,Mock and live API,Compare JSON keys and types with Issue.fromJson and toApi,No parse exception; all required fields serialize consistently,Pending,docs/week15_ia6/evidence/ui-and-api/,TBD,Pending
+Unknown issue ID returns 404,PAT-N-01,Valid JWT and nonexistent numeric ID,PATCH /api/issues/{unknown},404 issue not found,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+Duplicate issue is detected without a second insert,DUP-F-01,First controlled safety report exists,Submit same location/category again,200 duplicate payload; no second insert,200 duplicateOfId 12,docs/week15_ia6/evidence/remaining-live-evidence.json,TBD,Passed
+Repeated automation escalation run is bounded,DUP-N-01,Escalation run already active,Run manual escalation concurrently,409 already running or bounded non-duplicate escalation,Pending,docs/week15_ia6/evidence/api/,TBD,Pending
+API timeout produces actionable UI state,REL-F-01,Mock/controlled timeout,Submit report or list issues beyond ApiConfig.timeout,NetworkException; actionable check connection/retry signal,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+Dependency unavailable is handled safely,REL-N-01,Stop MySQL or induce database error,Submit/list issue,503 or queued failure; no internals; no false success,Pending,docs/week15_ia6/evidence/failure-injection/,TBD,Pending
+Transient retry recovers,REL-F-02,Faulting dependency on first two attempts,Run retry logic,Success after bounded 3 attempts,Pending,backend/test/automation.test.js,TBD,Implemented
+Permanent retry failure reaches human queue,REL-F-03,Permanent database error,Run retry logic,No retry; automation_failure queued,Pending,backend/test/automation.test.js,TBD,Implemented
+Stale issue escalation creates audit evidence,REL-F-04,Issue older than 24 hours,Run escalation/manual run,Issue escalated and audited once,Pending,backend/test/automation.test.js,TBD,Implemented
+Network interruption is not presented as success,REL-N-02,Disconnect test network after request starts,List or submit,Loading ends; network/server state is actionable,Pending,docs/week15_ia6/evidence/failure-injection/,TBD,Pending
+Login rate limit activates,SEC-F-01,Local API and test IP,Exceed loginLimiter configured threshold,429 Retry-After and safe lock/rate-limit message,Pending,docs/week15_ia6/evidence/security/,TBD,Pending
+API/general rate limit activates,SEC-F-02,Local API and test IP,Exceed /api apiLimiter threshold,429 Too many attempts or equivalent,Pending,docs/week15_ia6/evidence/security/,TBD,Pending
+Security headers are present,SEC-F-03,API running,Inspect GET /api/health or unknown route,Helmet headers present; no internal stack exposure,Pending,docs/week15_ia6/evidence/security/,TBD,Pending
+CORS rejects/accepts according to origin policy,SEC-F-04,Unknown Origin header https://unknown.invalid,Call /api/health,Unknown origin receives no allow-origin header; request response is not browser-authorized,HTTP 200 body with allowOrigin null,docs/week15_ia6/evidence/remaining-live-evidence.json,TBD,Passed
+Safe logs avoid PII/passwords/tokens/SQL,SEC-LOG-N-01,Perform sign-in/error/issue requests,Inspect API console and persisted logs,Email/password/token/SQL text absent; correlation-safe fields only,Pending,docs/week15_ia6/evidence/security/,TBD,Pending
+Safe error messages do not expose internals,SEC-N-02,Database and malformed request faults,Call API,Generic 500/503 JSON only; no stack trace or SQL,Pending,docs/week15_ia6/evidence/security/,TBD,Pending
+Flutter login validation matches the client rules,UI-F-01,Blank/invalid email/blank password,Submit login form,Blank field and malformed email messages; no API call,Pending,test/widget_test.dart,TBD,Implemented
+Report form blocks short values before API,UI-F-02,Report form and mocked API,Submit short title/location/description,Title/location/description minimum messages; API not called,Pending,test/widget_test.dart,TBD,Implemented
+Report form shows duplicate state,UI-F-03,Duplicate mock response,Submit valid report,Similar issue already reported notice,Pending,test/widget_test.dart,TBD,Implemented
+Report form shows network state,UI-F-04,Mock ClientException,Submit valid report,Cannot reach the server message,Pending,test/widget_test.dart,TBD,Implemented
+Student cannot open automation queue,UI-AUTHZ-01,Student user and mock queue API,Open FailureQueueScreen,Only coordinators and facilities staff notice,Pending,test/widget_test.dart,TBD,Implemented
+Loading state is visible and bounded,UI-F-05,Slow mocked API,Open issue list/report form,Spinner/loading label shown; primary action disabled while loading,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+Success state clears submitted report fields,UI-F-06,Successful create response,Submit valid report,Success state and cleared form fields,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+Empty issue state is clear,UI-F-07,Empty issue list response,Open issue list,No issues reported message,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+Server-error state is actionable,UI-F-08,503 mocked response,Submit/list,Server problem and retry/recovery signal,Pending,docs/week15_ia6/evidence/ui/,TBD,Pending
+Desktop layout has no overflow,UI-LAYOUT-01,1000x1600 desktop viewport,Visit login/report/list/queue screens,Primary content and actions remain visible without overflow,Pending,docs/week15_ia6/evidence/screenshots/,TBD,Pending
+Narrow layout has no overflow,UI-LAYOUT-02,600px or narrower viewport,Visit login/report/list/queue screens,No overflow; controls remain accessible,Pending,docs/week15_ia6/evidence/screenshots/,TBD,Pending

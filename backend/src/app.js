@@ -1,7 +1,9 @@
 const express = require('express');
+const crypto = require('crypto');
 const cors = require('cors');
 const helmet = require('helmet');
 const config = require('./config');
+const logger = require('./logger');
 const { apiLimiter } = require('./auth/limits');
 const authRoutes = require('./routes/auth');
 
@@ -11,6 +13,16 @@ const userRoutes = require('./routes/users');
 const automationRoutes = require('./routes/automation');
 
 const app = express();
+app.use((req, res, next) => {
+  const incoming = req.header('x-correlation-id');
+  const correlationId =
+    incoming && /^[A-Za-z0-9._-]{1,64}$/.test(incoming)
+      ? incoming
+      : crypto.randomUUID();
+  req.correlationId = correlationId;
+  res.setHeader('X-Correlation-ID', correlationId);
+  logger.runWithCorrelation(correlationId, next);
+});
 // Week 14: security headers (helmet) and CORS limited to the configured web origin(s).
 app.use(helmet());
 app.use(cors({
@@ -28,7 +40,7 @@ app.use(cors({
     return callback(null, isConfigured || isLocalDevelopment);
   },
   methods: ['GET', 'POST', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
 }));
 app.use('/api', apiLimiter);
 app.use(express.json({ limit: '20kb' }));

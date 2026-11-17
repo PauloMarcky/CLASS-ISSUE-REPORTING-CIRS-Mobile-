@@ -1,0 +1,30 @@
+Evidence ID,Task,Viewport,Observed result,File,Status
+UI-AUTH-SUCCESS-01,Successful student login,Desktop,Student dashboard shows Sam Student and Report/View quick actions,UI-AUTH-SUCCESS-DESKTOP.png,Captured
+UI-REPORT-VALIDATION-01,Report form invalid state,Desktop,Title/location/description minimum-character errors; submit remains available,UI-REPORT-VALIDATION-DESKTOP.png,Captured
+UI-REPORT-SUCCESS-01,Report submission success,Desktop,Report #8 received; routed to Electrical Maintenance; priority High,UI-REPORT-SUCCESS-DESKTOP.png,Captured
+UI-LIST-STUDENT-01,Student issue list,Desktop,Student's issue cards show status category priority team and escalated state,UI-LIST-STUDENT-DESKTOP.png,Captured
+UI-LIST-STUDENT-02,Student issue list continuation,Desktop,Populated issue list continues below the viewport,UI-LIST-STUDENT-DESKTOP-2.png,Captured
+UI-AUTHZ-FACILITIES-01,Facilities dashboard,Desktop,Facilities permissions show Update repair progress and deny report/category/verify actions,UI-AUTHZ-FACILITIES-DASHBOARD-DESKTOP.png,Captured
+UI-LIST-FACILITIES-01,Facilities issue list,Desktop,Assigned and unassigned issue cards with role-appropriate controls,UI-LIST-FACILITIES-DESKTOP.png,Captured
+UI-AUTOMATION-EMPTY-01,Automation review empty state,Desktop,Nothing needs manual action and Run Escalation Check is visible,UI-AUTOMATION-EMPTY-DESKTOP.png,Captured
+UI-AUTHZ-COORDINATOR-01,Coordinator dashboard,Desktop,Coordinator can categorize/assign and verify resolutions,UI-AUTHZ-COORDINATOR-DASHBOARD-DESKTOP.png,Captured
+UI-LIST-COORDINATOR-01,Coordinator issue list,Desktop,Coordinator view includes category assignment priority escalation and edit controls,UI-LIST-COORDINATOR-DESKTOP.png,Captured
+UI-COORDINATOR-CATEGORY-01,Coordinator category dialog,Desktop,Current status categorized and Electrical category selected,UI-COORDINATOR-CATEGORY-DIALOG-DESKTOP.png,Captured
+UI-COORDINATOR-ASSIGN-01,Coordinator assignment dialog,Desktop,Assign facilitator dialog lists Felix Facilities,UI-COORDINATOR-ASSIGN-DIALOG-DESKTOP.png,Captured
+UI-AUTHZ-STUDENT-01,Student dashboard,Desktop,Sam Student permission list; report issue and view issues available,UI-AUTHZ-STUDENT-DASHBOARD-DESKTOP.png,Captured
+UI-AUTHZ-FACULTY-01,Faculty dashboard,Desktop,Fiona Faculty permission list; report issue view issues and verify resolution available,UI-AUTHZ-FACULTY-DASHBOARD-DESKTOP.png,Captured
+UI-REPORT-NARROW-01,Report issue form,Narrow,390x844 viewport shows centered form and accessible submit button,UI-REPORT-NARROW-390.png,Captured
+UI-LIST-NARROW-01,Issue list,Narrow,390x844 viewport shows readable issue cards and controls,UI-LIST-NARROW-390.png,Captured
+UI-NETWORK-01,Network error,Desktop,All Issues shows Cannot reach the server with a Try again action,UI-NETWORK-ERROR-DESKTOP.png,Captured
+UI-SERVER-01,Server error,Desktop,View Issues shows the server problem state with a Try again action,UI-SERVER-ERROR-DESKTOP.png,Captured
+DB-OUTAGE-01,MySQL dependency outage,Desktop,MySQL80 service changed from Running to Stopped,DB-SERVICE-STOPPED.png,Captured
+UI-SERVER-ERROR-01,Flutter 5xx/database outage state,Desktop,Cloud-off icon with The server had a problem; Try again,UI-SERVER-ERROR-DESKTOP.png,Captured
+UI-SERVER-RECOVERY-01,Database recovery,Desktop,Issue list returns and issue cards are visible after MySQL restart,UI-SERVER-ERROR-RECOVERY-DESKTOP.png,Captured
+ANDROID-LOGIN-01,Android login,Android emulator,SRMS login screen with email/password and demo account actions,ANDROID-LOGIN.png,Captured
+ANDROID-DASHBOARD-01,Android student dashboard,Android emulator,Sam Student dashboard with report/view quick actions and permissions,ANDROID-DASHBOARD-STUDENT.png,Captured
+ANDROID-REPORT-FORM-01,Android report form,Android emulator,Issue details form with title location description submit action,ANDROID-REPORT-FORM.png,Captured
+ANDROID-LIST-01,Android issue list,Android emulator,Student issue cards show status category priority assignee team,ANDROID-LIST-STUDENT.png,Captured
+ANDROID-REPORT-SUCCESS-01,Android report success,Android emulator,Report success/routing or unknown-category coordinator review result,ANDROID-REPORT-SUCCESS.png,Captured
+ANDROID-LIST-POPULATED-01,Android populated list,Android emulator,Submitted testing issue is visible with reported needs-coordinator medium state,ANDROID-LIST-POPULATED.png,Captured
+ANDROID-ASSIGN-01,Android assign dialog,Android emulator,Assign facilitator dialog lists Felix Facilities,ANDROID-ASSIGN-DIALOG.png,Captured
+ANDROID-REVIEW-01,Android review dialog,Android emulator,Review issue dialog allows category and next status selection,ANDROID-REVIEW-DIALOG.png,Captured

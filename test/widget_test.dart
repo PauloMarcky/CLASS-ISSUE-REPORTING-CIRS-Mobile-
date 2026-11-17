@@ -8,6 +8,7 @@ import 'package:http/testing.dart';
 import 'package:srms/app.dart';
 import 'package:srms/data/mock_users.dart';
 import 'package:srms/screens/failure_queue_screen.dart';
+import 'package:srms/screens/issue_list_screen.dart';
 import 'package:srms/screens/report_issue_screen.dart';
 import 'package:srms/services/api_client.dart';
 
@@ -129,6 +130,47 @@ void main() {
           home: FailureQueueScreen(user: MockUsers.all.first, api: api)));
       await tester.pump();
       expect(find.textContaining('Only coordinators'), findsOneWidget);
+    });
+
+    testWidgets('issue list shows loading then empty state', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final api = _api((_) async => http.Response('[]', 200));
+      await tester.pumpWidget(MaterialApp(
+          home: IssueListScreen(user: MockUsers.all.first, api: api)));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('No issues have been reported yet.'), findsOneWidget);
+    });
+
+    testWidgets('issue list shows server error and retry action',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final api = _api((_) async => http.Response(
+          jsonEncode({'error': 'x'}), 503));
+      await tester.pumpWidget(MaterialApp(
+          home: IssueListScreen(user: MockUsers.all.first, api: api)));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('server had a problem'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+
+    testWidgets('narrow report form remains usable without overflow',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+          home: ReportIssueScreen(
+            user: MockUsers.all.first,
+            api: _api((_) async => http.Response('{}', 500)),
+          ),
+      ));
+      expect(find.text('Submit report'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

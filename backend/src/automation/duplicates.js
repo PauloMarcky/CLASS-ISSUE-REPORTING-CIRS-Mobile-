@@ -7,7 +7,7 @@ function normalizeLocation(location) {
 }
 
 // Returns the existing open issue row, or null when there is no duplicate.
-async function findDuplicate(pool, { location, category }) {
+async function findDuplicate(pool, { location, category, hours = 48 }) {
   if (!category) return null; // cannot compare uncategorized reports reliably
 
   const [rows] = await pool.query(
@@ -16,7 +16,7 @@ async function findDuplicate(pool, { location, category }) {
       WHERE category = ?
         AND LOWER(TRIM(location)) = ?
         AND status <> 'closed'
-        AND created_at >= CURDATE()
+        AND created_at >= DATE_SUB(NOW(), INTERVAL ? HOUR)
       ORDER BY created_at DESC
       LIMIT 1`,
     [category, normalizeLocation(location), hours],

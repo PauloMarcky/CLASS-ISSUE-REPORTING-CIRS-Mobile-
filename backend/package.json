@@ -8,6 +8,8 @@
     "dev": "node --watch src/server.js",
     "test": "node --test",
     "demo": "node scripts/demo-recovery.js",
+    "week15:evidence": "node scripts/run-week15-api-evidence.js",
+    "week15:remaining": "node scripts/run-week15-remaining-evidence.js",
     "seed:passwords": "node scripts/seed-passwords.js"
   },
   "license": "UNLICENSED",

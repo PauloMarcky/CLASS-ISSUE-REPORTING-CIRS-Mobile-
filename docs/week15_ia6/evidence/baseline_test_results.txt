@@ -1,0 +1,33 @@
+Baseline commands were run as part of Task 1 preparation on 2026-11-18.
+
+Backend:
+Command: cd backend && npm test
+Result: PASS
+Tests: 19
+Passed: 19
+Failed: 0
+Duration: 359 ms
+
+Flutter:
+Command: flutter test
+Result: PASS
+Tests: 10
+Passed: 10
+Failed: 0
+
+After Week 15 fixes:
+Backend:
+Command: cd backend && npm test
+Result: PASS
+Tests: 22
+Passed: 22
+Failed: 0
+Duration: 943 ms
+
+Flutter:
+Command: flutter test
+Result: PASS
+Tests: 13
+Passed: 13
+Failed: 0
+*** End Patch

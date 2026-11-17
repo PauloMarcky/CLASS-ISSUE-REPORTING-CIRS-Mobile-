@@ -1,0 +1,80 @@
+{
+  "baseUrl": "http://127.0.0.1:3000",
+  "recordedAt": "2026-11-17T22:45:58.934Z",
+  "secretFreeNote": "Passwords and bearer tokens are never written.",
+  "results": [
+    {
+      "name": "cors-unknown-origin",
+      "method": "GET",
+      "path": "/api/health",
+      "startedAt": "2026-11-17T22:45:57.508Z",
+      "completedAt": "2026-11-17T22:45:57.541Z",
+      "status": 200,
+      "correlationId": "2ff499f1-f3d5-4835-8f9e-900f0f1d9965",
+      "allowOrigin": null,
+      "body": {
+        "status": "ok",
+        "database": "up",
+        "time": "2026-11-17T22:45:57.535Z"
+      }
+    },
+    {
+      "name": "duplicate-first-submission",
+      "method": "POST",
+      "path": "/api/issues",
+      "startedAt": "2026-11-17T22:45:58.861Z",
+      "completedAt": "2026-11-17T22:45:58.882Z",
+      "status": 201,
+      "correlationId": "3ba30dc7-007b-43da-b61a-b964a899758e",
+      "allowOrigin": null,
+      "body": {
+        "id": "12",
+        "title": "Sparking outlet - Week15 controlled duplicate",
+        "description": "Controlled fictional outlet sparking issue used for duplicate evidence.",
+        "location": "Test Building - Room 101",
+        "reporterId": "u1",
+        "category": "safety",
+        "routedTeam": "Campus Safety Office",
+        "priority": "urgent",
+        "status": "categorized",
+        "assignedToId": null,
+        "isEscalated": false,
+        "createdAt": "2026-11-17T22:45:58.000Z",
+        "updatedAt": "2026-11-17T22:45:58.000Z"
+      }
+    },
+    {
+      "name": "duplicate-second-submission",
+      "method": "POST",
+      "path": "/api/issues",
+      "startedAt": "2026-11-17T22:45:58.882Z",
+      "completedAt": "2026-11-17T22:45:58.886Z",
+      "status": 200,
+      "correlationId": "780ca54a-293e-446f-849c-275b6e5d452c",
+      "allowOrigin": null,
+      "body": {
+        "duplicate": true,
+        "duplicateOfId": "12",
+        "message": "A similar open issue already exists for this location.",
+        "existingIssue": {
+          "id": "12",
+          "title": "Sparking outlet - Week15 controlled duplicate",
+          "status": "categorized"
+        }
+      }
+    },
+    {
+      "name": "object-level-403-other-user",
+      "method": "PATCH",
+      "path": "/api/issues/12",
+      "startedAt": "2026-11-17T22:45:58.928Z",
+      "completedAt": "2026-11-17T22:45:58.933Z",
+      "status": 403,
+      "correlationId": "ed626ff7-379c-49bc-a536-11840a15dea0",
+      "allowOrigin": null,
+      "body": {
+        "error": "You can only verify your own issue."
+      }
+    }
+  ]
+}
