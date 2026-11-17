@@ -14,10 +14,14 @@ A modern, secure, and automated Flutter Web application with a Node.js backend a
 
 ## Project Structure
 
-- lib/: Flutter Web frontend (screens, models, services, theme).
-- backend/: Node.js Express API (routes, automation engines, auth middleware).
-- backend/sql/: Database schema and automation tables.
-- docs/: Architecture decisions and automation evidence (week13_sa7.md).
+- `lib/` - Flutter Web and Android frontend.
+- `backend/` - Node.js/Express API and backend tests.
+- `backend/sql/` - MySQL schema and automation setup.
+- `test/` - Flutter widget/API client tests.
+- `scripts/` - Evidence helper scripts.
+- `docs/` - Assessment documents, diagrams, reports, and evidence.
+- `docs/week13/` - Week 13 Word artifacts.
+- `docs/week15_ia6/` - Week 15 test and hardening deliverables.
 
 ## Setup Instructions
 
@@ -49,6 +53,15 @@ Verify the API is running by visiting http://localhost:3000/api/health
     flutter test                (Run widget and API client tests)
     flutter run -d chrome --dart-define-from-file=dart_defines.json
 
+For Android Emulator, keep the backend running with `npm start` and run:
+
+    flutter run -d emulator-5554 --dart-define-from-file=dart_defines.json
+
+The Android emulator reaches the Windows host through `10.0.2.2`, which is
+the API address in `dart_defines.json`. A physical Android device must use the
+Windows computer's local-network IP address instead, with both devices on the
+same network.
+
 ## Demo Accounts
 
 The system includes four fictional prototype accounts. Use the password Passw0rd! for all of them.
@@ -71,5 +84,7 @@ The system includes four fictional prototype accounts. Use the password Passw0rd
 
 - Automation Decisions: See docs/week13_sa7.md for workflow boundaries, retry policies, and API contracts.
 - Test Evidence: Run npm test and flutter test to generate the required testing artifacts for IA6.
+- Week 15 IA6: See docs/week15_ia6/test_strategy.docx, trust_boundaries.docx, hardening_report.docx, and Week15_IA6_Evidence_Pack.docx.
+- Week 15 API collection: backend/postman/week15_ia6_collection.json
 
 Built for PFEBSIT 002 - Integrative Programming and Technologies 2

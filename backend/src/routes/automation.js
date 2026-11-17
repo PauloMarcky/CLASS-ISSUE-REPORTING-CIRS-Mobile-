@@ -6,28 +6,6 @@ const { requireAuth } = require('../auth/middleware');
 
 const router = express.Router();
 
-// SUPERSEDED in Week 14 by requireAuth (signed tokens); the function below is unused and
-// trusted a forgeable x-user-id header. Kept only until the cleanup step. Old note: the role is
-// read from the database. A header can be forged; Week 14 replaces this with
-// real authentication (signed tokens).
-async function requireStaff(req, res, next) {
-  const userId = req.header('x-user-id');
-  if (!userId) return res.status(401).json({ error: 'Sign in required.' });
-  try {
-    const [rows] = await pool.query('SELECT id, role FROM users WHERE id = ?', [userId]);
-    if (rows.length === 0) return res.status(401).json({ error: 'Sign in required.' });
-    if (!['coordinator', 'facilitiesStaff'].includes(rows[0].role)) {
-      logger.warn('automation.access.denied', { userId, role: rows[0].role });
-      return res.status(403).json({ error: 'You are not allowed to do this.' });
-    }
-    req.actor = rows[0];
-    return next();
-  } catch (err) {
-    logger.error('automation.auth.failed', { code: err.code || 'UNKNOWN' });
-    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
-  }
-}
-
 router.use(requireAuth(['coordinator', 'facilitiesStaff']));
 
 function toApi(row) {

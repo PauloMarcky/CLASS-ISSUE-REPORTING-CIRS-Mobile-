@@ -1,0 +1,130 @@
+{
+  "info": {
+    "name": "SRMS Week 15 IA6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "testPassword", "value": "set-in-secret-free-local-environment" },
+    { "key": "studentToken", "value": "" },
+    { "key": "coordinatorToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/health" }
+    },
+    {
+      "name": "Login - valid student",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"student@srms.test\",\n  \"password\": \"{{testPassword}}\"\n}" },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Login - missing fields",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Auth - missing token",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/auth/me" }
+    },
+    {
+      "name": "Auth - altered token",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer altered.invalid.token" }],
+        "url": "{{baseUrl}}/api/auth/me"
+      }
+    },
+    {
+      "name": "Issue - missing fields",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"title\":\"x\",\"location\":\"\",\"description\":\"short\"}" },
+        "url": "{{baseUrl}}/api/issues"
+      }
+    },
+    {
+      "name": "Issue - normal create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Test projector is not responding\",\n  \"location\": \"Test Building - Room 101\",\n  \"description\": \"Fictional test issue: the classroom projector remains unavailable.\",\n  \"reporterId\": \"ignored-by-server\"\n}"
+        },
+        "url": "{{baseUrl}}/api/issues"
+      }
+    },
+    {
+      "name": "Issue - duplicate",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Test projector is not responding\",\n  \"location\": \"Test Building - Room 101\",\n  \"description\": \"Fictional test issue: repeated controlled report.\",\n  \"reporterId\": \"ignored-by-server\"\n}"
+        },
+        "url": "{{baseUrl}}/api/issues"
+      }
+    },
+    {
+      "name": "Issue - list own/role filtered",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{studentToken}}" }],
+        "url": "{{baseUrl}}/api/issues"
+      }
+    },
+    {
+      "name": "Issue - unknown id",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{coordinatorToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"status\":\"closed\"}" },
+        "url": "{{baseUrl}}/api/issues/999999999"
+      }
+    },
+    {
+      "name": "Users - student forbidden",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{studentToken}}" }],
+        "url": "{{baseUrl}}/api/users?role=facilitiesStaff"
+      }
+    },
+    {
+      "name": "Automation - student forbidden",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{studentToken}}" }],
+        "url": "{{baseUrl}}/api/automation/failures"
+      }
+    },
+    {
+      "name": "Unknown route",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/not-a-real-route" }
+    }
+  ]
+}

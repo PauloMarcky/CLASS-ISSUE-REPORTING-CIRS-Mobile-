@@ -49,3 +49,7 @@ app.*.map.json
 
 # Brud Code workspace history
 .brud/
+
+# Local runtime configuration
+dart_defines.json
+backend/.env

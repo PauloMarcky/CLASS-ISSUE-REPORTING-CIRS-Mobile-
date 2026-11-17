@@ -38,15 +38,20 @@ router.post('/login', loginLimiter, async (req, res) => {
   try {
     const [rows] = await pool.query(
       'SELECT id, name, email, role, password_hash, failed_logins, ' +
-        '(locked_until IS NOT NULL AND locked_until > NOW()) AS is_locked ' +
+        'locked_until, (locked_until IS NOT NULL AND locked_until > NOW()) AS is_locked ' +
         'FROM users WHERE email = ?',
       [email],
     );
     const user = rows[0];
 
     if (user && Number(user.is_locked) === 1) {
+      const remainingMs = Math.max(0, new Date(user.locked_until).getTime() - Date.now());
+      const minutes = Math.max(1, Math.ceil(remainingMs / 60000));
+      res.set('Retry-After', String(Math.ceil(remainingMs / 1000)));
       logger.warn('auth.login.locked', { userId: user.id });
-      return res.status(429).json({ error: 'Too many failed attempts. Please try again later.' });
+      return res.status(429).json({
+        error: `Too many failed attempts. Please wait ${minutes} minute${minutes === 1 ? '' : 's'} before trying again.`,
+      });
     }
 
     const hash = user && user.password_hash ? user.password_hash : DUMMY_HASH;

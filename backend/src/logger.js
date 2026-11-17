@@ -11,6 +11,8 @@ const REDACTED_KEYS = new Set([
   'description', // free-text from users may contain personal details
   'email',
 ]);
+const { AsyncLocalStorage } = require('node:async_hooks');
+const correlationStorage = new AsyncLocalStorage();
 
 function redact(value, depth = 0) {
   if (value === null || typeof value !== 'object' || depth > 4) return value;
@@ -26,10 +28,12 @@ function redact(value, depth = 0) {
 }
 
 function write(level, event, fields = {}) {
+  const correlationId = correlationStorage.getStore();
   const line = JSON.stringify({
     time: new Date().toISOString(),
     level,
     event,
+    ...(correlationId ? { correlationId } : {}),
     ...redact(fields),
   });
   if (level === 'error' || level === 'warn') {
@@ -44,4 +48,6 @@ module.exports = {
   warn: (event, fields) => write('warn', event, fields),
   error: (event, fields) => write('error', event, fields),
   redact,
+  runWithCorrelation: (correlationId, callback) =>
+    correlationStorage.run(correlationId, callback),
 };
